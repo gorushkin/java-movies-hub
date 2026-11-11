@@ -9,6 +9,7 @@ import java.util.Map;
 
 public class MoviesStore {
     Map<Integer, Movie> movies = new HashMap<>();
+
     private int currentIndex = 1;
 
     public Movie addMovie(int year, String title) {
@@ -23,7 +24,7 @@ public class MoviesStore {
     }
 
     public List<Movie> getMoviesByYear(int year) {
-        return getMovies().stream().filter((m) -> m.getYear() == year).toList();
+        return getAllMovies().stream().filter((m) -> m.getYear() == year).toList();
     }
 
     public void deleteMovie(int id) {
@@ -34,7 +35,7 @@ public class MoviesStore {
         return movies.size();
     }
 
-    public List<Movie> getMovies() {
+    public List<Movie> getAllMovies() {
         return new ArrayList<>(movies.values());
     }
 }

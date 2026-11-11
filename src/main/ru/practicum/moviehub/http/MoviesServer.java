@@ -7,24 +7,20 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 public class MoviesServer {
-    private static final int PORT = 8080;
-    HttpServer server;
+    HttpServer httpServer;
 
-    public MoviesServer(MoviesStore moviesStore, int i) throws IOException {
-        server = HttpServer.create();
-        server.bind(new InetSocketAddress(PORT), 0);
-        System.out.println("server = " + server.getAddress());
+    public MoviesServer(MoviesStore moviesStore, int port) throws IOException {
+        httpServer = HttpServer.create();
+        httpServer.bind(new InetSocketAddress(port), 0);
 
-        server.createContext("/movies", new GetMoviesHandler());
+        httpServer.createContext("/movies", new MoviesHandler(moviesStore));
     }
 
     public void start() {
-        server.start();
-        System.out.println("HTTP-сервер запущен на " + PORT + " порту!");
+        httpServer.start();
     }
 
     public void stop() {
-        System.out.println("MoviesServer.stop");
-        server.stop(0);
+        httpServer.stop(0);
     }
 }

@@ -3,6 +3,7 @@ package ru.practicum.moviehub.http;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import ru.practicum.moviehub.model.Movie;
+import ru.practicum.moviehub.dto.MovieDTO;
 import ru.practicum.moviehub.store.MoviesStore;
 
 import java.time.LocalDate;
@@ -10,26 +11,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MoviesStoreTest {
-    private List<TestData> getMoviesData(int moviesCount) {
-        List<TestData> testData = new ArrayList<>();
+    private List<MovieDTO> getMoviesData(int moviesCount) {
+        List<MovieDTO> movieData = new ArrayList<>();
 
         for (int i = 0; i < moviesCount; i++) {
-            var movie = new TestData(LocalDate.now().getYear() - moviesCount + i, "movieTitle" + i);
-            testData.add(movie);
+            var movie = new MovieDTO(LocalDate.now().getYear() - moviesCount + i, "movieTitle" + i);
+            movieData.add(movie);
         }
 
-        return testData;
+        return movieData;
     }
 
-    private List<TestData> getMoviesData(int moviesCount, int year) {
-        List<TestData> testData = new ArrayList<>();
+    private List<MovieDTO> getMoviesData(int moviesCount, int year) {
+        List<MovieDTO> movieData = new ArrayList<>();
 
         for (int i = 0; i < moviesCount; i++) {
-            var movie = new TestData(year, "movieTitle" + i);
-            testData.add(movie);
+            var movie = new MovieDTO(year, "movieTitle" + i);
+            movieData.add(movie);
         }
 
-        return testData;
+        return movieData;
     }
 
     @Test
@@ -44,17 +45,17 @@ public class MoviesStoreTest {
         MoviesStore store = new MoviesStore();
 
         var moviesSize = 3;
-        List<TestData> testDataList = getMoviesData(moviesSize);
+        List<MovieDTO> movieDTOList = getMoviesData(moviesSize);
 
         List<Movie> createdMovies = new ArrayList<>();
 
-        for (var movieData : testDataList) {
-            var createdMovie = store.addMovie(movieData.year, movieData.title);
+        for (var movieData : movieDTOList) {
+            var createdMovie = store.addMovie(movieData.year(), movieData.title());
             createdMovies.add(createdMovie);
         }
 
-        Assertions.assertEquals(testDataList.size(), store.size());
-        Assertions.assertIterableEquals(createdMovies, store.getMovies());
+        Assertions.assertEquals(movieDTOList.size(), store.size());
+        Assertions.assertEquals(createdMovies, store.getAllMovies());
     }
 
     @Test
@@ -86,7 +87,7 @@ public class MoviesStoreTest {
 
         Integer[] nonTargetYears = {otherYear1, otherYear2, otherYear3, otherYear4};
 
-        List<TestData> testDataList = getMoviesData(expectedMoviesCount, targetYear);
+        List<MovieDTO> movieDTOList = getMoviesData(expectedMoviesCount, targetYear);
 
         for (int year : nonTargetYears) {
             store.addMovie(year, "movieTitle" + year);
@@ -94,13 +95,13 @@ public class MoviesStoreTest {
 
         List<Movie> createdMovies = new ArrayList<>();
 
-        for (var movieData : testDataList) {
-            createdMovies.add(store.addMovie(movieData.year, movieData.title));
+        for (var movieData : movieDTOList) {
+            createdMovies.add(store.addMovie(movieData.year(), movieData.title()));
         }
 
         var filteredMovies = store.getMoviesByYear(targetYear);
         Assertions.assertEquals(expectedMoviesCount, filteredMovies.size());
-        Assertions.assertIterableEquals(createdMovies, filteredMovies);
+        Assertions.assertEquals(createdMovies, filteredMovies);
     }
 
     @Test
@@ -109,11 +110,11 @@ public class MoviesStoreTest {
 
         var movieIdToDelete = 1;
 
-        List<TestData> testDataList = getMoviesData(5);
+        List<MovieDTO> movieDTOList = getMoviesData(5);
         List<Movie> createdMovies = new ArrayList<>();
 
-        for (var movieData : testDataList) {
-            createdMovies.add(store.addMovie(movieData.year, movieData.title));
+        for (var movieData : movieDTOList) {
+            createdMovies.add(store.addMovie(movieData.year(), movieData.title()));
         }
 
         store.deleteMovie(movieIdToDelete);
@@ -121,8 +122,5 @@ public class MoviesStoreTest {
 
         var deletedMovie = store.getMovieById(movieIdToDelete);
         Assertions.assertNull(deletedMovie);
-    }
-
-    record TestData(int year, String title) {
     }
 }
