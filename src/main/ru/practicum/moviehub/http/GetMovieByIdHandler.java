@@ -1,6 +1,8 @@
 package ru.practicum.moviehub.http;
 
 import com.sun.net.httpserver.HttpExchange;
+import ru.practicum.moviehub.exception.BadRequestException;
+import ru.practicum.moviehub.exception.NotFoundMovieException;
 import ru.practicum.moviehub.model.Movie;
 import ru.practicum.moviehub.store.MoviesStore;
 
@@ -15,9 +17,17 @@ public class GetMovieByIdHandler extends BaseHttpHandlerWithStore {
     public void handle(HttpExchange exchange) throws IOException {
         String[] segments = exchange.getRequestURI().getPath().split("/");
 
-        int id = Integer.parseInt(segments[2]);
-        Movie movie = moviesStore.getMovieById(id);
+        try {
+            int id = Integer.parseInt(segments[2]);
+            Movie movie = moviesStore.getMovieById(id);
 
-        sendResponse(movie, exchange, 200);
+            if (movie == null) {
+                throw new NotFoundMovieException();
+            }
+
+            sendResponse(movie, exchange, 200);
+        } catch (NumberFormatException e) {
+            throw new BadRequestException();
+        }
     }
 }

@@ -4,7 +4,9 @@ import com.google.gson.Gson;
 import org.junit.jupiter.api.*;
 import ru.practicum.moviehub.dto.ErrorResponse;
 import ru.practicum.moviehub.dto.MovieDTO;
+import ru.practicum.moviehub.exception.BadRequestException;
 import ru.practicum.moviehub.exception.MovieValidationException;
+import ru.practicum.moviehub.exception.NotFoundMovieException;
 import ru.practicum.moviehub.model.Movie;
 import ru.practicum.moviehub.store.MoviesStore;
 
@@ -63,7 +65,9 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
-        assertEquals(200, response.statusCode(), "GET /movies должен вернуть 200");
+        int expectedStatusCode = 200;
+
+        assertEquals(expectedStatusCode, response.statusCode(), "GET /movies должен вернуть" + expectedStatusCode);
 
         String contentTypeHeaderValue =
                 response.headers().firstValue("Content-Type").orElse("");
@@ -98,7 +102,9 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
-        assertEquals(200, response.statusCode(), "GET /movies должен вернуть 200");
+        int expectedStatusCode = 200;
+
+        assertEquals(expectedStatusCode, response.statusCode(), "GET /movies должен вернуть" + expectedStatusCode);
 
         String contentTypeHeaderValue =
                 response.headers().firstValue("Content-Type").orElse("");
@@ -139,7 +145,9 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
-        assertEquals(201, response.statusCode(), "POST /movies должен вернуть 201");
+        int expectedStatusCode = 201;
+
+        assertEquals(expectedStatusCode, response.statusCode(), "GET /movies должен вернуть" + expectedStatusCode);
 
         String body = response.body().trim();
 
@@ -147,9 +155,6 @@ public class MoviesApiTest {
         Assertions.assertEquals(data1.year(), parsedMovie.getYear(), "Год добавленного фильма совпадает");
         Assertions.assertEquals(data1.title(), parsedMovie.getTitle(), "Название добавленного фильма совпадает");
     }
-
-
-
 
     @Test
     void returnValidationError_whenTitleIsNotValid() throws Exception {
@@ -175,14 +180,18 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
-        assertEquals(422, response.statusCode(), "POST /movies должен вернуть 201");
+        int expectedStatusCode = 422;
+
+        assertEquals(expectedStatusCode, response.statusCode(), "GET /movies должен вернуть" + expectedStatusCode);
 
         String body = response.body().trim();
 
         ErrorResponse parsedResponse = gson.fromJson(body, ErrorResponse.class);
 
-        Assertions.assertEquals(MovieValidationException.errorName, parsedResponse.error());
-        Assertions.assertEquals(1, parsedResponse.details().size());
+        parsedResponse.getDetails().forEach(System.out::println);
+
+        Assertions.assertEquals(MovieValidationException.errorName, parsedResponse.getError());
+        Assertions.assertEquals(1, parsedResponse.getDetails().size());
     }
 
     @Test
@@ -207,7 +216,9 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
-        assertEquals(415, response.statusCode(), "POST /movies должен вернуть 415");
+        int expectedStatusCode = 415;
+
+        assertEquals(expectedStatusCode, response.statusCode(), "POST /movies должен вернуть" + expectedStatusCode);
     }
 
     @Test
@@ -230,7 +241,9 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
-        assertEquals(200, response.statusCode(), "GET /movies:id должен вернуть 200");
+        int expectedStatusCode = 200;
+
+        assertEquals(expectedStatusCode, response.statusCode(), "GET /movies должен вернуть" + expectedStatusCode);
 
         String body = response.body().trim();
 
@@ -240,5 +253,61 @@ public class MoviesApiTest {
         assertEquals(addedMovie.getId(), parsedResponse.getId());
         assertEquals(addedMovie.getTitle(), parsedResponse.getTitle());
         assertEquals(addedMovie.getYear(), parsedResponse.getYear());
+    }
+
+    @Test
+    void returnNotFoundErrorIfMovieNotFround() throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
+
+        URI url = urlBuilder.addPathSegment("5").buildUri();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .GET()
+                .build();
+
+        HttpResponse.BodyHandler<String> responseBodyHandler =
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8);
+
+        HttpResponse<String> response = client.send(request, responseBodyHandler);
+
+        int expectedStatusCode = 404;
+
+        assertEquals(expectedStatusCode, response.statusCode(), "GET /movies:id должен вернуть" + expectedStatusCode);
+
+        String body = response.body().trim();
+
+        Gson gson = new Gson();
+        ErrorResponse parsedResponse = gson.fromJson(body, ErrorResponse.class);
+
+        Assertions.assertEquals(NotFoundMovieException.errorName, parsedResponse.getError());
+    }
+
+    @Test
+    void returnBadRequestErrorIfIdIsNotProper() throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
+
+        URI url = urlBuilder.addPathSegment("asdfasdfadf").buildUri();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .GET()
+                .build();
+
+        HttpResponse.BodyHandler<String> responseBodyHandler =
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8);
+
+        HttpResponse<String> response = client.send(request, responseBodyHandler);
+
+        int expectedStatusCode = 400;
+
+        assertEquals(expectedStatusCode, response.statusCode(), "GET /movies:id должен вернуть" + expectedStatusCode);
+
+        String body = response.body().trim();
+
+        Gson gson = new Gson();
+        ErrorResponse parsedResponse = gson.fromJson(body, ErrorResponse.class);
+
+        Assertions.assertEquals(BadRequestException.errorName, parsedResponse.getError());
     }
 }
