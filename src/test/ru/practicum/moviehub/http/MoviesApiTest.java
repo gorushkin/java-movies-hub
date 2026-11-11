@@ -4,9 +4,7 @@ import com.google.gson.Gson;
 import org.junit.jupiter.api.*;
 import ru.practicum.moviehub.dto.ErrorResponse;
 import ru.practicum.moviehub.dto.MovieDTO;
-import ru.practicum.moviehub.exception.BadRequestException;
 import ru.practicum.moviehub.exception.MovieValidationException;
-import ru.practicum.moviehub.exception.NotFoundMovieException;
 import ru.practicum.moviehub.model.Movie;
 import ru.practicum.moviehub.store.MoviesStore;
 
@@ -17,6 +15,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,16 +25,6 @@ public class MoviesApiTest {
     MoviesServer server;
     MoviesStore movieStore;
     UrlBuilder urlBuilder;
-
-    @BeforeAll
-    static void beforeAll() {
-
-    }
-
-    @AfterAll
-    static void afterAll() {
-    }
-
 
     @BeforeEach
     void beforeEach() throws IOException {
@@ -50,7 +39,6 @@ public class MoviesApiTest {
     void afterEach() throws IOException {
         this.server.stop();
     }
-
 
     @Test
     void getMovies_whenEmpty_returnsEmptyArray() throws Exception {
@@ -89,7 +77,7 @@ public class MoviesApiTest {
 
         System.out.println("movieStore = " + movieStore);
 
-        var movies = movieStore.getAllMovies();
+        var movies = movieStore.getMovies();
 
         HttpClient client = HttpClient.newHttpClient();
 
@@ -280,14 +268,14 @@ public class MoviesApiTest {
         Gson gson = new Gson();
         ErrorResponse parsedResponse = gson.fromJson(body, ErrorResponse.class);
 
-        Assertions.assertEquals(NotFoundMovieException.errorName, parsedResponse.getError());
+        Assertions.assertEquals("Фильм не найден", parsedResponse.getError());
     }
 
     @Test
     void returnBadRequestErrorIfIdIsNotProper() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
-        URI url = urlBuilder.addPathSegment("asdfasdfadf").buildUri();
+        URI url = urlBuilder.addPathSegment("id").buildUri();
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(url)
@@ -308,6 +296,83 @@ public class MoviesApiTest {
         Gson gson = new Gson();
         ErrorResponse parsedResponse = gson.fromJson(body, ErrorResponse.class);
 
-        Assertions.assertEquals(BadRequestException.errorName, parsedResponse.getError());
+        Assertions.assertEquals("Некорректный ID", parsedResponse.getError());
+    }
+
+    @Test
+    void returnFilterMoviesByYearProperly() throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
+
+        int targetYear = LocalDate.now().getYear();
+
+        int targetYearMoviesCount = 3;
+        int otherYearsMoviesCount = 5;
+
+        List<Movie> targetMovies = new ArrayList<>();
+
+        for (int i = 0; i <= targetYearMoviesCount; i++) {
+            targetMovies.add(movieStore.addMovie(targetYear, "targetYearMovieTitle" + i));
+        }
+
+        for (int i = 0; i <= otherYearsMoviesCount; i++) {
+            movieStore.addMovie(targetYear - 1 - i, "nonTargetYearMovieTitle" + i);
+        }
+
+        URI url = urlBuilder
+                .addQueryParameter("year", targetYear)
+                .buildUri();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .GET()
+                .build();
+
+        HttpResponse.BodyHandler<String> responseBodyHandler =
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8);
+
+        HttpResponse<String> response = client.send(request, responseBodyHandler);
+
+        int expectedStatusCode = 200;
+
+        assertEquals(expectedStatusCode, response.statusCode(), "GET /movies?year должен вернуть" + expectedStatusCode);
+
+        String body = response.body().trim();
+
+        Gson gson = new Gson();
+
+        List<Movie> parsedMovies = gson.fromJson(body, new ListOfMoviesTypeToken().getType());
+
+        Assertions.assertEquals(targetMovies.size(), parsedMovies.size());
+        Assertions.assertEquals(targetMovies, parsedMovies);
+    }
+
+    @Test
+    void returnBadRequestException() throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
+
+        URI url = urlBuilder
+                .addQueryParameter("year", "wrongYearValue")
+                .buildUri();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .GET()
+                .build();
+
+        HttpResponse.BodyHandler<String> responseBodyHandler =
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8);
+
+        HttpResponse<String> response = client.send(request, responseBodyHandler);
+
+        int expectedStatusCode = 400;
+
+        assertEquals(expectedStatusCode, response.statusCode(), "GET /movies?year должен вернуть" + expectedStatusCode);
+
+        String body = response.body().trim();
+
+        Gson gson = new Gson();
+        ErrorResponse parsedResponse = gson.fromJson(body, ErrorResponse.class);
+
+        Assertions.assertEquals("Некорректный параметр запроса — 'year'", parsedResponse.getError());
     }
 }

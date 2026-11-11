@@ -55,7 +55,7 @@ public class MoviesStoreTest {
         }
 
         Assertions.assertEquals(movieDTOList.size(), store.size());
-        Assertions.assertEquals(createdMovies, store.getAllMovies());
+        Assertions.assertEquals(createdMovies, store.getMovies());
     }
 
     @Test
@@ -99,7 +99,7 @@ public class MoviesStoreTest {
             createdMovies.add(store.addMovie(movieData.year(), movieData.title()));
         }
 
-        var filteredMovies = store.getMoviesByYear(targetYear);
+        var filteredMovies = store.getMovies(targetYear);
         Assertions.assertEquals(expectedMoviesCount, filteredMovies.size());
         Assertions.assertEquals(createdMovies, filteredMovies);
     }

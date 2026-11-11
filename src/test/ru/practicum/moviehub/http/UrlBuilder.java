@@ -17,11 +17,17 @@ class UrlBuilder {
     }
 
     UrlBuilder addQueryParameter(String key, String value) {
+
         var sep = hasQueryParams ? "&" : "?";
 
         this.url = this.url + sep + key + "=" + value;
+        hasQueryParams = true;
 
         return this;
+    }
+
+    UrlBuilder addQueryParameter(String key, int value) {
+        return addQueryParameter(key, String.valueOf(value));
     }
 
     URI buildUri() {

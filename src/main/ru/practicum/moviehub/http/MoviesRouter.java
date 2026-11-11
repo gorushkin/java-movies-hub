@@ -48,7 +48,6 @@ class MoviesRouter extends BaseHttpHandler {
         addRoute("DELETE", path, handler);
     }
 
-
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         try {

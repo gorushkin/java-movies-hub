@@ -23,10 +23,6 @@ public class MoviesStore {
         return movies.get(id);
     }
 
-    public List<Movie> getMoviesByYear(int year) {
-        return getAllMovies().stream().filter((m) -> m.getYear() == year).toList();
-    }
-
     public void deleteMovie(int id) {
         this.movies.remove(id);
     }
@@ -35,7 +31,11 @@ public class MoviesStore {
         return movies.size();
     }
 
-    public List<Movie> getAllMovies() {
+    public List<Movie> getMovies() {
         return new ArrayList<>(movies.values());
+    }
+
+    public List<Movie> getMovies(int year) {
+        return new ArrayList<>(movies.values()).stream().filter((m) -> m.getYear() == year).toList();
     }
 }

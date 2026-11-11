@@ -2,7 +2,7 @@ package ru.practicum.moviehub.http;
 
 import com.sun.net.httpserver.HttpExchange;
 import ru.practicum.moviehub.exception.BadRequestException;
-import ru.practicum.moviehub.exception.NotFoundMovieException;
+import ru.practicum.moviehub.exception.NotFoundException;
 import ru.practicum.moviehub.model.Movie;
 import ru.practicum.moviehub.store.MoviesStore;
 
@@ -22,12 +22,12 @@ public class GetMovieByIdHandler extends BaseHttpHandlerWithStore {
             Movie movie = moviesStore.getMovieById(id);
 
             if (movie == null) {
-                throw new NotFoundMovieException();
+                throw new NotFoundException("Фильм не найден");
             }
 
             sendResponse(movie, exchange, 200);
         } catch (NumberFormatException e) {
-            throw new BadRequestException();
+            throw new BadRequestException("Некорректный ID");
         }
     }
 }
