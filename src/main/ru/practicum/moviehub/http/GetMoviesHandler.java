@@ -5,7 +5,7 @@ import ru.practicum.moviehub.store.MoviesStore;
 
 import java.io.IOException;
 
-public class GetMoviesHandler extends BaseHttpHandler {
+public class GetMoviesHandler extends BaseHttpHandlerWithStore {
     public GetMoviesHandler(MoviesStore moviesStore) {
         super(moviesStore);
     }

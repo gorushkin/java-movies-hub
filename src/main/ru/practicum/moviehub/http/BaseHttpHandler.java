@@ -11,12 +11,6 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 public abstract class BaseHttpHandler implements HttpHandler {
-    protected final MoviesStore moviesStore;
-
-    public BaseHttpHandler(MoviesStore moviesStore) {
-        this.moviesStore = moviesStore;
-    }
-
     public void sendResponse(Object data, HttpExchange exchange, int rCode) throws IOException {
         Gson gson = new Gson();
 
@@ -39,3 +33,4 @@ public abstract class BaseHttpHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
     }
 }
+

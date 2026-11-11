@@ -12,7 +12,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
-public class AddMovieHandler extends BaseHttpHandler {
+public class AddMovieHandler extends BaseHttpHandlerWithStore {
     public AddMovieHandler(MoviesStore moviesStore) {
         super(moviesStore);
     }
