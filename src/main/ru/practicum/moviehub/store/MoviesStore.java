@@ -23,8 +23,13 @@ public class MoviesStore {
         return movies.get(id);
     }
 
-    public void deleteMovie(int id) {
+    public boolean deleteMovie(int id) {
+        if (!movies.containsKey(id)) {
+            return false;
+        }
+
         this.movies.remove(id);
+        return true;
     }
 
     public int size() {

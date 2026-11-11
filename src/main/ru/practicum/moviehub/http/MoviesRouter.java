@@ -65,7 +65,7 @@ class MoviesRouter extends BaseHttpHandler {
 
             route.handler().handle(exchange);
         } catch (AppException e) {
-            sendResponse(e.getResponseBody(), exchange, e.getResponseCode());
+            sendResponseWithBody(e.getResponseBody(), exchange, e.getResponseCode());
         } catch (Exception e) {
             exchange.sendResponseHeaders(500, -1);
         }

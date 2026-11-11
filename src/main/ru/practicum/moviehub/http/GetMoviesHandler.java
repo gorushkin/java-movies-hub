@@ -20,7 +20,7 @@ public class GetMoviesHandler extends BaseHttpHandlerWithStore {
                     moviesStore.getMovies() :
                     moviesStore.getMovies(Integer.parseInt(query));
 
-            sendResponse(movies, exchange, 200);
+            sendResponseWithBody(movies, exchange, 200);
         } catch (NumberFormatException e) {
             throw new BadRequestException("Некорректный параметр запроса — 'year'");
         }

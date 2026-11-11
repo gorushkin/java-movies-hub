@@ -18,6 +18,7 @@ public class MoviesServer {
         router.get("/movies", new GetMoviesHandler(moviesStore));
         router.post("/movies", new AddMovieHandler(moviesStore));
         router.get("/movies/[^/]+", new GetMovieByIdHandler(moviesStore));
+        router.delete("/movies/[^/]+", new DeleteMovieById(moviesStore));
 
         httpServer.createContext("/movies", router);
     }

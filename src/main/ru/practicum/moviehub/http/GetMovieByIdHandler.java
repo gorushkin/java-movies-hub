@@ -25,7 +25,7 @@ public class GetMovieByIdHandler extends BaseHttpHandlerWithStore {
                 throw new NotFoundException("Фильм не найден");
             }
 
-            sendResponse(movie, exchange, 200);
+            sendResponseWithBody(movie, exchange, 200);
         } catch (NumberFormatException e) {
             throw new BadRequestException("Некорректный ID");
         }

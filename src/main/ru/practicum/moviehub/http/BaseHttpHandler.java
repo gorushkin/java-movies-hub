@@ -10,11 +10,9 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 public abstract class BaseHttpHandler implements HttpHandler {
-    public void sendResponse(Object data, HttpExchange exchange, int rCode) throws IOException {
+    public void sendResponseWithBody(Object data, HttpExchange exchange, int rCode) throws IOException {
         Gson gson = new Gson();
-
         String json = gson.toJson(data);
-
         byte[] response = json.getBytes(StandardCharsets.UTF_8);
 
         Headers headers = exchange.getResponseHeaders();
@@ -26,6 +24,10 @@ public abstract class BaseHttpHandler implements HttpHandler {
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(response);
         }
+    }
+
+    public void sendResponseWithoutBody(HttpExchange exchange, int rCode) throws IOException {
+        exchange.sendResponseHeaders(rCode, -1);
     }
 
 

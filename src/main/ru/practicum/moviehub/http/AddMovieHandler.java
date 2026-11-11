@@ -37,6 +37,6 @@ public class AddMovieHandler extends BaseHttpHandlerWithStore {
         MovieDTO movieDTO = gson.fromJson(movieDTODeserialized, MovieDTO.class);
 
         Movie addedMovie = this.moviesStore.addMovie(movieDTO.year(), movieDTO.title());
-        sendResponse(addedMovie, exchange, 201);
+        sendResponseWithBody(addedMovie, exchange, 201);
     }
 }

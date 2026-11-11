@@ -375,4 +375,85 @@ public class MoviesApiTest {
 
         Assertions.assertEquals("Некорректный параметр запроса — 'year'", parsedResponse.getError());
     }
+
+    @Test
+    void shouldDeleteMovieSuccessfully() throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
+
+        MovieDTO movieData = new MovieDTO(LocalDate.now().getYear(), "movie1");
+        var addedMovie = movieStore.addMovie(movieData.year(), movieData.title());
+        String id = String.valueOf(addedMovie.getId());
+
+        URI url = urlBuilder.addPathSegment(id).buildUri();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .DELETE()
+                .build();
+
+        HttpResponse.BodyHandler<String> responseBodyHandler =
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8);
+
+        HttpResponse<String> response = client.send(request, responseBodyHandler);
+
+        int expectedStatusCode = 204;
+
+        assertEquals(expectedStatusCode, response.statusCode(), "DELETE /movies должен вернуть" + expectedStatusCode);
+    }
+
+    @Test
+    void shouldReturnNotFoundErrorIfWilmDoesNotExistDuringDeleting() throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
+
+        URI url = urlBuilder.addPathSegment("15").buildUri();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .DELETE()
+                .build();
+
+        HttpResponse.BodyHandler<String> responseBodyHandler =
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8);
+
+        HttpResponse<String> response = client.send(request, responseBodyHandler);
+
+        int expectedStatusCode = 404;
+
+        assertEquals(expectedStatusCode, response.statusCode(), "DELETE /movies должен вернуть" + expectedStatusCode);
+
+        String body = response.body().trim();
+
+        Gson gson = new Gson();
+        ErrorResponse parsedResponse = gson.fromJson(body, ErrorResponse.class);
+
+        Assertions.assertEquals("Фильм не найден", parsedResponse.getError());
+    }
+
+    @Test
+    void shouldReturnBadRequestExceptionIfWilmIdWrongDuringDeleting() throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
+
+        URI url = urlBuilder.addPathSegment("wrongFimId").buildUri();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .DELETE()
+                .build();
+
+        HttpResponse.BodyHandler<String> responseBodyHandler =
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8);
+
+        HttpResponse<String> response = client.send(request, responseBodyHandler);
+
+        int expectedStatusCode = 400;
+
+        assertEquals(expectedStatusCode, response.statusCode(), "DELETE /movies должен вернуть" + expectedStatusCode);
+
+        String body = response.body().trim();
+
+        Gson gson = new Gson();
+        ErrorResponse parsedResponse = gson.fromJson(body, ErrorResponse.class);
+
+        Assertions.assertEquals("Некорректный ID", parsedResponse.getError());
+    }
 }
