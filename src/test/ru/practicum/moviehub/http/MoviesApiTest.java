@@ -148,7 +148,6 @@ public class MoviesApiTest {
     void returnValidationError_whenTitleIsNotValid() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
-
         URI url = urlBuilder.buildUri();
 
         MovieDTO data1 = new MovieDTO(LocalDate.now().getYear(), "");
@@ -180,6 +179,31 @@ public class MoviesApiTest {
 
         Assertions.assertEquals(MovieValidationException.errorName, parsedResponse.getError());
         Assertions.assertEquals(1, parsedResponse.getDetails().size());
+    }
+
+    @Test
+    void returnValidationError_whenBodyIsWrong() throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
+
+        URI url = urlBuilder.buildUri();
+
+        Gson gson = new Gson();
+        String body1 = gson.toJson(null);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(url)
+                .header("Content-Type", "application/json; charset=UTF-8")
+                .POST(HttpRequest.BodyPublishers.ofString(body1))
+                .build();
+
+        HttpResponse.BodyHandler<String> responseBodyHandler =
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8);
+
+        HttpResponse<String> response = client.send(request, responseBodyHandler);
+
+        int expectedStatusCode = 400;
+
+        assertEquals(expectedStatusCode, response.statusCode(), "GET /movies должен вернуть" + expectedStatusCode);
     }
 
     @Test

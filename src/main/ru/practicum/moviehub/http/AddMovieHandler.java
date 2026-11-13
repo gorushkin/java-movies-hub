@@ -3,6 +3,7 @@ package ru.practicum.moviehub.http;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import ru.practicum.moviehub.dto.MovieDTO;
+import ru.practicum.moviehub.exception.BadRequestException;
 import ru.practicum.moviehub.exception.UnsupportedMediaTypeException;
 import ru.practicum.moviehub.model.Movie;
 import ru.practicum.moviehub.store.MoviesStore;
@@ -34,11 +35,17 @@ public class AddMovieHandler extends BaseHttpHandlerWithStore {
         Gson gson = new Gson();
         InputStream inputStream = exchange.getRequestBody();
         String movieDTODeserialized = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+
         MovieDTO movieDTO = gson.fromJson(movieDTODeserialized, MovieDTO.class);
+
+        if (movieDTO == null) {
+            throw new BadRequestException("Тело запроса должно содержать объект фильма");
+        }
 
         MoveValidator.validateMovie(movieDTO.year(), movieDTO.title());
 
         Movie addedMovie = this.moviesStore.addMovie(movieDTO.year(), movieDTO.title());
         sendResponseWithBody(addedMovie, exchange, 201);
+
     }
 }

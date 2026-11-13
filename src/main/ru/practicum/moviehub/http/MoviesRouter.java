@@ -3,7 +3,7 @@ package ru.practicum.moviehub.http;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import ru.practicum.moviehub.exception.AppException;
-import ru.practicum.moviehub.exception.NotFoundException;
+import ru.practicum.moviehub.exception.NotFoundRoute;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -62,27 +62,23 @@ class MoviesRouter extends BaseHttpHandler {
     public void handle(HttpExchange exchange) throws IOException {
         try {
             if (routes.isEmpty()) {
-                throw new NotFoundException();
+                throw new NotFoundRoute("Method Not Allowed");
             }
 
             var filteredRoutes = this.routes.stream().filter(r -> r.matches().test(exchange)).toList();
 
             if (filteredRoutes.isEmpty()) {
-                throw new NotFoundException();
+                throw new NotFoundRoute("Method Not Allowed");
             }
 
             var route = this.routes.stream().filter(r -> r.matches().test(exchange)).toList().getFirst();
 
             if (route == null) {
-                throw new NotFoundException();
+                throw new NotFoundRoute("Method Not Allowed");
             }
 
             route.handler().handle(exchange);
         } catch (AppException e) {
-            if (e.getResponseBody() == null) {
-                sendResponseWithoutBody(exchange, e.getResponseCode());
-            }
-
             sendResponseWithBody(e.getResponseBody(), exchange, e.getResponseCode());
         } catch (Exception e) {
             exchange.sendResponseHeaders(500, -1);

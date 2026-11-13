@@ -11,7 +11,7 @@ public class MoveValidator {
         List<String> errors = new ArrayList<>();
 
         validateYear(year, errors);
-        validateTitle(title, errors);
+        validateTitle(title.trim(), errors);
 
         if (!errors.isEmpty()) {
             throw new MovieValidationException(errors);
@@ -19,7 +19,7 @@ public class MoveValidator {
     }
 
     private static void validateYear(int year, List<String> errors) {
-        int minYear = 1900;
+        int minYear = 1888;
         int maxYear = LocalDate.now().getYear() + 1;
 
         if (year < minYear || year > maxYear) {

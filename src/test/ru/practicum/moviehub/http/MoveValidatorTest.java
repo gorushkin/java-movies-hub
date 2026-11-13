@@ -15,7 +15,7 @@ public class MoveValidatorTest {
         int biggerThanMaxYear = LocalDate.now().getYear() + 10;
 
         String properTitle = "title";
-        String toShortTitle = "";
+        String toShortTitle = " ";
         String toLongTitle = "0123456789".repeat(20);
 
         MovieDTO[] testDataList = {
@@ -31,5 +31,4 @@ public class MoveValidatorTest {
             });
         }
     }
-
 }
