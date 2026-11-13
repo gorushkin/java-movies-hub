@@ -34,14 +34,14 @@ public class MoviesStoreTest {
     }
 
     @Test
-    public void shouldCreatEmptyStore() {
+    public void getMovies_whenStoreIsNew_returnsEmptyStore() {
         MoviesStore store = new MoviesStore();
         Assertions.assertNotNull(store);
         Assertions.assertEquals(0, store.size());
     }
 
     @Test
-    public void shouldAddMovieToStore() {
+    public void addMovie_whenMoviesAreAdded_storesMovies() {
         MoviesStore store = new MoviesStore();
 
         var moviesSize = 3;
@@ -59,7 +59,7 @@ public class MoviesStoreTest {
     }
 
     @Test
-    public void shouldReturnMovieById() {
+    public void getMovieById_whenMovieExists_returnsMovie() {
         MoviesStore store = new MoviesStore();
 
         var movie1 = store.addMovie(LocalDate.now().getYear(), "movieTitle1");
@@ -74,7 +74,7 @@ public class MoviesStoreTest {
 
 
     @Test
-    public void shouldFilterMoviesByYear() {
+    public void getMovies_whenYearIsSpecified_returnsMatchingMovies() {
         MoviesStore store = new MoviesStore();
 
         var targetYear = LocalDate.now().getYear() - 10;
@@ -105,7 +105,7 @@ public class MoviesStoreTest {
     }
 
     @Test
-    public void shouldDeleteMovieById() {
+    public void deleteMovie_whenMovieExists_removesMovie() {
         MoviesStore store = new MoviesStore();
 
         var movieIdToDelete = 1;

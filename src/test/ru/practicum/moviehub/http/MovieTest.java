@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 public class MovieTest {
     @Test
-    void shouldCreateMovieWithYearAndTitle() {
+    void constructor_whenDataIsProvided_preservesYearAndTitle() {
         int year = LocalDate.now().getYear();
         var title = "title";
         var id = 1;
@@ -19,7 +19,7 @@ public class MovieTest {
     }
 
     @Test
-    void shouldCompareEqualsMovesCorrectly() {
+    void equals_whenMoviesHaveSameFields_returnsTrue() {
         int year = LocalDate.now().getYear();
         String title = "title";
 

@@ -18,8 +18,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class MoviesApiTest {
     MoviesServer server;
@@ -53,6 +52,8 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
+        assertJsonContentType(response);
+
         int expectedStatusCode = 200;
 
         assertEquals(expectedStatusCode, response.statusCode(), "GET /movies должен вернуть" + expectedStatusCode);
@@ -65,17 +66,15 @@ public class MoviesApiTest {
 
         String body = response.body().trim();
 
-        assertTrue(body.startsWith("[") && body.endsWith("]"),
-                "Ожидается JSON-массив");
+        assertEquals("[]", body, "Ожидается пустой JSON-массив");
     }
 
     @Test
-    void getMovies_whenHasTwoMovies_returnsArrayWithTwoMovies() throws Exception {
+    void getMovies_whenMoviesExist_returnsStoredMovies() throws Exception {
 
         movieStore.addMovie(2015, "move1");
         movieStore.addMovie(2020, "move2");
 
-        System.out.println("movieStore = " + movieStore);
 
         var movies = movieStore.getMovies();
 
@@ -89,6 +88,8 @@ public class MoviesApiTest {
                 HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8);
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
+
+        assertJsonContentType(response);
 
         int expectedStatusCode = 200;
 
@@ -111,7 +112,7 @@ public class MoviesApiTest {
     }
 
     @Test
-    void addMovieSuccessfully() throws Exception {
+    void addMovie_whenDataIsValid_returnsCreatedMovie() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
         URI url = urlBuilder.buildUri();
@@ -133,6 +134,8 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
+        assertJsonContentType(response);
+
         int expectedStatusCode = 201;
 
         assertEquals(expectedStatusCode, response.statusCode(), "GET /movies должен вернуть" + expectedStatusCode);
@@ -140,12 +143,14 @@ public class MoviesApiTest {
         String body = response.body().trim();
 
         Movie parsedMovie = gson.fromJson(body, Movie.class);
+        assertTrue(parsedMovie.getId() > 0);
+        assertEquals(parsedMovie, movieStore.getMovieById(parsedMovie.getId()));
         Assertions.assertEquals(data1.year(), parsedMovie.getYear(), "Год добавленного фильма совпадает");
         Assertions.assertEquals(data1.title(), parsedMovie.getTitle(), "Название добавленного фильма совпадает");
     }
 
     @Test
-    void returnValidationError_whenTitleIsNotValid() throws Exception {
+    void addMovie_whenTitleIsEmpty_returnsValidationError() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
         URI url = urlBuilder.buildUri();
@@ -167,6 +172,8 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
+        assertJsonContentType(response);
+
         int expectedStatusCode = 422;
 
         assertEquals(expectedStatusCode, response.statusCode(), "GET /movies должен вернуть" + expectedStatusCode);
@@ -175,14 +182,13 @@ public class MoviesApiTest {
 
         ErrorResponse parsedResponse = gson.fromJson(body, ErrorResponse.class);
 
-        parsedResponse.getDetails().forEach(System.out::println);
 
         Assertions.assertEquals(MovieValidationException.errorName, parsedResponse.getError());
         Assertions.assertEquals(1, parsedResponse.getDetails().size());
     }
 
     @Test
-    void returnValidationError_whenBodyIsWrong() throws Exception {
+    void addMovie_whenBodyIsNull_returnsBadRequest() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
         URI url = urlBuilder.buildUri();
@@ -201,13 +207,15 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
+        assertJsonContentType(response);
+
         int expectedStatusCode = 400;
 
         assertEquals(expectedStatusCode, response.statusCode(), "GET /movies должен вернуть" + expectedStatusCode);
     }
 
     @Test
-    void returnUnsupportedMediaTypeError_whenContentTypeIsWrong() throws Exception {
+    void addMovie_whenContentTypeIsMissing_returnsUnsupportedMediaType() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
         URI url = urlBuilder.buildUri();
@@ -228,13 +236,15 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
+        assertJsonContentType(response);
+
         int expectedStatusCode = 415;
 
         assertEquals(expectedStatusCode, response.statusCode(), "POST /movies должен вернуть" + expectedStatusCode);
     }
 
     @Test
-    void returnMovieByIdSuccessfully() throws Exception {
+    void getMovieById_whenMovieExists_returnsMovie() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
         MovieDTO movieData = new MovieDTO(LocalDate.now().getYear(), "movie1");
@@ -253,6 +263,8 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
+        assertJsonContentType(response);
+
         int expectedStatusCode = 200;
 
         assertEquals(expectedStatusCode, response.statusCode(), "GET /movies должен вернуть" + expectedStatusCode);
@@ -268,7 +280,7 @@ public class MoviesApiTest {
     }
 
     @Test
-    void returnNotFoundErrorIfMovieNotFround() throws Exception {
+    void getMovieById_whenMovieDoesNotExist_returnsNotFound() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
         URI url = urlBuilder.addPathSegment("5").buildUri();
@@ -283,6 +295,8 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
+        assertJsonContentType(response);
+
         int expectedStatusCode = 404;
 
         assertEquals(expectedStatusCode, response.statusCode(), "GET /movies:id должен вернуть" + expectedStatusCode);
@@ -296,7 +310,7 @@ public class MoviesApiTest {
     }
 
     @Test
-    void returnBadRequestErrorIfIdIsNotProper() throws Exception {
+    void getMovieById_whenIdIsNotNumeric_returnsBadRequest() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
         URI url = urlBuilder.addPathSegment("id").buildUri();
@@ -311,6 +325,8 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
+        assertJsonContentType(response);
+
         int expectedStatusCode = 400;
 
         assertEquals(expectedStatusCode, response.statusCode(), "GET /movies:id должен вернуть" + expectedStatusCode);
@@ -324,7 +340,7 @@ public class MoviesApiTest {
     }
 
     @Test
-    void returnFilterMoviesByYearProperly() throws Exception {
+    void getMovies_whenYearIsSpecified_returnsMatchingMovies() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
         int targetYear = LocalDate.now().getYear();
@@ -334,11 +350,11 @@ public class MoviesApiTest {
 
         List<Movie> targetMovies = new ArrayList<>();
 
-        for (int i = 0; i <= targetYearMoviesCount; i++) {
+        for (int i = 0; i < targetYearMoviesCount; i++) {
             targetMovies.add(movieStore.addMovie(targetYear, "targetYearMovieTitle" + i));
         }
 
-        for (int i = 0; i <= otherYearsMoviesCount; i++) {
+        for (int i = 0; i < otherYearsMoviesCount; i++) {
             movieStore.addMovie(targetYear - 1 - i, "nonTargetYearMovieTitle" + i);
         }
 
@@ -356,6 +372,8 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
+        assertJsonContentType(response);
+
         int expectedStatusCode = 200;
 
         assertEquals(expectedStatusCode, response.statusCode(), "GET /movies?year должен вернуть" + expectedStatusCode);
@@ -371,7 +389,7 @@ public class MoviesApiTest {
     }
 
     @Test
-    void returnBadRequestException() throws Exception {
+    void getMovies_whenYearIsNotNumeric_returnsBadRequest() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
         URI url = urlBuilder
@@ -388,6 +406,8 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
+        assertJsonContentType(response);
+
         int expectedStatusCode = 400;
 
         assertEquals(expectedStatusCode, response.statusCode(), "GET /movies?year должен вернуть" + expectedStatusCode);
@@ -401,7 +421,7 @@ public class MoviesApiTest {
     }
 
     @Test
-    void shouldDeleteMovieSuccessfully() throws Exception {
+    void deleteMovie_whenMovieExists_returnsNoContent() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
         MovieDTO movieData = new MovieDTO(LocalDate.now().getYear(), "movie1");
@@ -420,13 +440,17 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
+        assertJsonContentType(response);
+
         int expectedStatusCode = 204;
 
         assertEquals(expectedStatusCode, response.statusCode(), "DELETE /movies должен вернуть" + expectedStatusCode);
+        assertEquals("", response.body());
+        Assertions.assertNull(movieStore.getMovieById(addedMovie.getId()));
     }
 
     @Test
-    void shouldReturnNotFoundErrorIfWilmDoesNotExistDuringDeleting() throws Exception {
+    void deleteMovie_whenMovieDoesNotExist_returnsNotFound() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
         URI url = urlBuilder.addPathSegment("15").buildUri();
@@ -441,6 +465,8 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
+        assertJsonContentType(response);
+
         int expectedStatusCode = 404;
 
         assertEquals(expectedStatusCode, response.statusCode(), "DELETE /movies должен вернуть" + expectedStatusCode);
@@ -454,7 +480,7 @@ public class MoviesApiTest {
     }
 
     @Test
-    void shouldReturnBadRequestExceptionIfWilmIdWrongDuringDeleting() throws Exception {
+    void deleteMovie_whenIdIsNotNumeric_returnsBadRequest() throws Exception {
         HttpClient client = HttpClient.newHttpClient();
 
         URI url = urlBuilder.addPathSegment("wrongFimId").buildUri();
@@ -469,6 +495,8 @@ public class MoviesApiTest {
 
         HttpResponse<String> response = client.send(request, responseBodyHandler);
 
+        assertJsonContentType(response);
+
         int expectedStatusCode = 400;
 
         assertEquals(expectedStatusCode, response.statusCode(), "DELETE /movies должен вернуть" + expectedStatusCode);
@@ -479,5 +507,82 @@ public class MoviesApiTest {
         ErrorResponse parsedResponse = gson.fromJson(body, ErrorResponse.class);
 
         Assertions.assertEquals("Некорректный ID", parsedResponse.getError());
+    }
+
+    @Test
+    void addMovie_whenJsonIsMalformed_returnsBadRequest() throws Exception {
+        var response = sendPost("application/json", "{broken");
+
+        assertErrorResponse(response, 400);
+        assertEquals(0, movieStore.size());
+    }
+
+    @Test
+    void addMovie_whenContentTypeIsTextPlain_returnsUnsupportedMediaType() throws Exception {
+        var response = sendPost("text/plain", "{\"title\":\"Movie\",\"year\":2000}");
+
+        assertErrorResponse(response, 415);
+        assertEquals(0, movieStore.size());
+    }
+
+    @Test
+    void addMovie_whenContentTypeHasInvalidSuffix_returnsUnsupportedMediaType() throws Exception {
+        var response = sendPost("application/json-invalid", "{\"title\":\"Movie\",\"year\":2000}");
+
+        assertErrorResponse(response, 415);
+        assertEquals(0, movieStore.size());
+    }
+
+    @Test
+    void getMovies_whenNoMoviesMatchYear_returnsEmptyArray() throws Exception {
+        movieStore.addMovie(2000, "Other year");
+        var request = HttpRequest.newBuilder()
+                .uri(urlBuilder.addQueryParameter("year", 2001).buildUri())
+                .GET()
+                .build();
+
+        var response = HttpClient.newHttpClient().send(request,
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+        assertEquals(200, response.statusCode());
+        assertJsonContentType(response);
+        assertEquals("[]", response.body().trim());
+    }
+
+    @Test
+    void updateMovies_whenMethodIsUnsupported_returnsMethodNotAllowed() throws Exception {
+        var request = HttpRequest.newBuilder()
+                .uri(urlBuilder.buildUri())
+                .PUT(HttpRequest.BodyPublishers.noBody())
+                .build();
+
+        var response = HttpClient.newHttpClient().send(request,
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+        assertErrorResponse(response, 405);
+    }
+
+    private HttpResponse<String> sendPost(String contentType, String body) throws Exception {
+        var request = HttpRequest.newBuilder()
+                .uri(urlBuilder.buildUri())
+                .header("Content-Type", contentType)
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+        return HttpClient.newHttpClient().send(request,
+                HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+    }
+
+    private void assertJsonContentType(HttpResponse<String> response) {
+        assertEquals("application/json; charset=UTF-8",
+                response.headers().firstValue("Content-Type").orElse(""));
+    }
+
+    private void assertErrorResponse(HttpResponse<String> response, int expectedStatus) {
+        assertEquals(expectedStatus, response.statusCode());
+        assertJsonContentType(response);
+        var error = new Gson().fromJson(response.body(), ErrorResponse.class);
+        Assertions.assertNotNull(error);
+        Assertions.assertNotNull(error.getError());
+        assertFalse(error.getError().isBlank());
     }
 }

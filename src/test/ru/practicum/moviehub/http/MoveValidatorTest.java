@@ -1,38 +1,56 @@
 package ru.practicum.moviehub.http;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import ru.practicum.moviehub.dto.MovieDTO;
 import ru.practicum.moviehub.exception.MovieValidationException;
 
 import java.time.LocalDate;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class MoveValidatorTest {
     @Test
-    void shouldThrowExceptionWhenYearIsInvalid() {
-        int properYear = LocalDate.now().getYear();
-        int lessThanMinYear = 1000;
-        int biggerThanMaxYear = LocalDate.now().getYear() + 10;
+    void validateMovie_whenYearIsOutsideAllowedRange_throwsValidationException() {
+        int maxYear = LocalDate.now().getYear() + 1;
 
-        String properTitle = "title";
-        String emptyTitle = " ";
-        String nullTitle = null;
-        String toShortTitle = "";
-        String toLongTitle = "0123456789".repeat(20);
-
-        MovieDTO[] testDataList = {
-                new MovieDTO(lessThanMinYear, properTitle),
-                new MovieDTO(biggerThanMaxYear, properTitle),
-                new MovieDTO(properYear, toShortTitle),
-                new MovieDTO(properYear, toLongTitle),
-                new MovieDTO(properYear, nullTitle),
-                new MovieDTO(properYear, emptyTitle),
-        };
-
-        for (var testData : testDataList) {
-            Assertions.assertThrows(MovieValidationException.class, () -> {
-                MoveValidator.validateMovie(testData);
-            });
+        for (int year : new int[]{1887, maxYear + 1}) {
+            var movie = new MovieDTO(year, "Movie");
+            var exception = assertThrows(MovieValidationException.class,
+                    () -> MoveValidator.validateMovie(movie), "Год: " + year);
+            assertEquals(422, exception.getResponseCode());
         }
+    }
+
+    @Test
+    void validateMovie_whenYearIsAtAllowedBoundary_acceptsMovie() {
+        int maxYear = LocalDate.now().getYear() + 1;
+
+        for (int year : new int[]{1888, maxYear}) {
+            assertDoesNotThrow(() -> MoveValidator.validateMovie(new MovieDTO(year, "Movie")),
+                    "Год: " + year);
+        }
+    }
+
+    @Test
+    void validateMovie_whenTitleIsNullEmptyOrBlank_throwsValidationException() {
+        for (String title : new String[]{null, "", " "}) {
+            var movie = new MovieDTO(2000, title);
+            assertThrows(MovieValidationException.class, () -> MoveValidator.validateMovie(movie),
+                    "Название: " + title);
+        }
+    }
+
+    @Test
+    void validateMovie_whenTitleHas101Characters_throwsValidationException() {
+        var movie = new MovieDTO(2000, "a".repeat(101));
+
+        assertThrows(MovieValidationException.class, () -> MoveValidator.validateMovie(movie));
+    }
+
+    @Test
+    void validateMovie_whenTitleHas100Characters_acceptsMovie() {
+        var movie = new MovieDTO(2000, "a".repeat(100));
+
+        assertDoesNotThrow(() -> MoveValidator.validateMovie(movie));
     }
 }
