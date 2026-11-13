@@ -1,14 +1,37 @@
 package ru.practicum.moviehub.http;
 
+import com.google.gson.JsonPrimitive;
 import org.junit.jupiter.api.Test;
 import ru.practicum.moviehub.dto.MovieDTO;
+import ru.practicum.moviehub.dto.ErrorResponse;
 import ru.practicum.moviehub.exception.MovieValidationException;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MoveValidatorTest {
+    @Test
+    void validateYearConversion_whenYearOverflowsInteger_reportsAllowedRange() {
+        var exception = assertThrows(MovieValidationException.class,
+                () -> MoveValidator.validateYearConversion(new JsonPrimitive(new BigDecimal("4294969296"))));
+
+        var error = (ErrorResponse) exception.getResponseBody();
+        assertEquals(List.of("год должен быть между 1888 и " + (LocalDate.now().getYear() + 1)),
+                error.getDetails());
+    }
+
+    @Test
+    void validateYearConversion_whenYearIsFractional_reportsIntegerRequirement() {
+        var exception = assertThrows(MovieValidationException.class,
+                () -> MoveValidator.validateYearConversion(new JsonPrimitive(new BigDecimal("2000.5"))));
+
+        var error = (ErrorResponse) exception.getResponseBody();
+        assertEquals(List.of("год должен быть целым числом"), error.getDetails());
+    }
+
     @Test
     void validateMovie_whenYearIsOutsideAllowedRange_throwsValidationException() {
         int maxYear = LocalDate.now().getYear() + 1;

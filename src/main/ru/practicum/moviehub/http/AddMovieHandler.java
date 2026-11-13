@@ -57,6 +57,7 @@ public class AddMovieHandler extends BaseHttpHandlerWithStore {
                 throw new BadRequestException("Тело запроса должно содержать объект фильма");
             }
 
+            MoveValidator.validateYearConversion(json.getAsJsonObject().get("year"));
             return gson.fromJson(json, MovieDTO.class);
         } catch (IOException | JsonSyntaxException e) {
             throw new BadRequestException("Тело запроса должно содержать корректный JSON");
