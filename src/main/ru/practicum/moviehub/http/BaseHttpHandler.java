@@ -27,6 +27,7 @@ public abstract class BaseHttpHandler implements HttpHandler {
     }
 
     public void sendResponseWithoutBody(HttpExchange exchange, int rCode) throws IOException {
+        exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
         exchange.sendResponseHeaders(rCode, -1);
     }
 
