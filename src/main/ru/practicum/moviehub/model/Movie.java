@@ -1,10 +1,4 @@
 package ru.practicum.moviehub.model;
-
-import ru.practicum.moviehub.exception.MovieValidationException;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class Movie {
