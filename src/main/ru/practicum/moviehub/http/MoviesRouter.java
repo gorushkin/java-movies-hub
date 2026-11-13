@@ -13,15 +13,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-
-record Route(
-        String method,
-        Pattern path,
-        BaseHttpHandler handler
-) {
-}
-
-
 class MoviesRouter extends BaseHttpHandler {
     List<Route> routes = new ArrayList<>();
     HttpServer httpServer;
