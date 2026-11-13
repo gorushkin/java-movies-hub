@@ -1,6 +1,7 @@
 package ru.practicum.moviehub.http;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import ru.practicum.moviehub.dto.MovieDTO;
 import ru.practicum.moviehub.exception.BadRequestException;
@@ -11,7 +12,6 @@ import ru.practicum.moviehub.store.MoviesStore;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Locale;
 
 public class AddMovieHandler extends BaseHttpHandlerWithStore {
     public AddMovieHandler(MoviesStore moviesStore) {
@@ -23,7 +23,7 @@ public class AddMovieHandler extends BaseHttpHandlerWithStore {
                 .getFirst("Content-Type");
 
         if (contentType == null ||
-                !contentType.toLowerCase(Locale.ROOT).startsWith("application/json")) {
+                !contentType.split(";", 2)[0].trim().equalsIgnoreCase("application/json")) {
             throw new UnsupportedMediaTypeException();
         }
     }
@@ -36,16 +36,20 @@ public class AddMovieHandler extends BaseHttpHandlerWithStore {
         InputStream inputStream = exchange.getRequestBody();
         String movieDTODeserialized = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 
-        MovieDTO movieDTO = gson.fromJson(movieDTODeserialized, MovieDTO.class);
+        try {
+            MovieDTO movieDTO = gson.fromJson(movieDTODeserialized, MovieDTO.class);
 
-        if (movieDTO == null) {
+            if (movieDTO == null) {
+                throw new BadRequestException("Тело запроса должно содержать объект фильма");
+            }
+
+            MoveValidator.validateMovie(movieDTO);
+
+            Movie addedMovie = this.moviesStore.addMovie(movieDTO.year(), movieDTO.title());
+            sendResponseWithBody(addedMovie, exchange, 201);
+        } catch (JsonSyntaxException e) {
             throw new BadRequestException("Тело запроса должно содержать объект фильма");
         }
-
-        MoveValidator.validateMovie(movieDTO.year(), movieDTO.title());
-
-        Movie addedMovie = this.moviesStore.addMovie(movieDTO.year(), movieDTO.title());
-        sendResponseWithBody(addedMovie, exchange, 201);
 
     }
 }

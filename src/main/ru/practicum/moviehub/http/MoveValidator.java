@@ -1,5 +1,6 @@
 package ru.practicum.moviehub.http;
 
+import ru.practicum.moviehub.dto.MovieDTO;
 import ru.practicum.moviehub.exception.MovieValidationException;
 
 import java.time.LocalDate;
@@ -7,11 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MoveValidator {
-    public static void validateMovie(int year, String title) {
+    public static void validateMovie(MovieDTO movieDTO) throws MovieValidationException {
         List<String> errors = new ArrayList<>();
 
+        var title = movieDTO.title();
+        var year = movieDTO.year();
+
         validateYear(year, errors);
-        validateTitle(title.trim(), errors);
+        validateTitle(title, errors);
 
         if (!errors.isEmpty()) {
             throw new MovieValidationException(errors);
@@ -30,7 +34,7 @@ public class MoveValidator {
     private static void validateTitle(String title, List<String> errors) {
         int maxTitleLength = 100;
 
-        if (title == null || title.isEmpty()) {
+        if (title == null || title.trim().isEmpty()) {
             errors.add("название не должно быть пустым");
         }
 

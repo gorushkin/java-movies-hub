@@ -15,7 +15,9 @@ public class MoveValidatorTest {
         int biggerThanMaxYear = LocalDate.now().getYear() + 10;
 
         String properTitle = "title";
-        String toShortTitle = " ";
+        String emptyTitle = " ";
+        String nullTitle = null;
+        String toShortTitle = "";
         String toLongTitle = "0123456789".repeat(20);
 
         MovieDTO[] testDataList = {
@@ -23,11 +25,13 @@ public class MoveValidatorTest {
                 new MovieDTO(biggerThanMaxYear, properTitle),
                 new MovieDTO(properYear, toShortTitle),
                 new MovieDTO(properYear, toLongTitle),
+                new MovieDTO(properYear, nullTitle),
+                new MovieDTO(properYear, emptyTitle),
         };
 
         for (var testData : testDataList) {
             Assertions.assertThrows(MovieValidationException.class, () -> {
-                MoveValidator.validateMovie(testData.year(), testData.title());
+                MoveValidator.validateMovie(testData);
             });
         }
     }

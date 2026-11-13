@@ -3,6 +3,7 @@ package ru.practicum.moviehub.http;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import ru.practicum.moviehub.exception.AppException;
+import ru.practicum.moviehub.exception.NotAllowedMethod;
 import ru.practicum.moviehub.exception.NotFoundRoute;
 
 import java.io.IOException;
@@ -10,13 +11,12 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Predicate;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 record Route(
-        Predicate<HttpExchange> matches,
+        String method,
+        Pattern path,
         BaseHttpHandler handler
 ) {
 }
@@ -33,17 +33,8 @@ class MoviesRouter extends BaseHttpHandler {
     }
 
     private void addRoute(String method, String path, BaseHttpHandler handler) {
-        Pattern pattern = Pattern.compile(path);
-
-        var matches = new Predicate<HttpExchange>() {
-            @Override
-            public boolean test(HttpExchange httpExchange) {
-                Matcher matcher = pattern.matcher(httpExchange.getRequestURI().getPath());
-                return httpExchange.getRequestMethod().equals(method.toUpperCase(Locale.ROOT)) && matcher.matches();
-            }
-        };
-
-        this.routes.add(new Route(matches, handler));
+        this.routes.add(new Route(
+                method.toUpperCase(Locale.ROOT), Pattern.compile(path), handler));
     }
 
     void get(String path, BaseHttpHandler handler) {
@@ -61,21 +52,18 @@ class MoviesRouter extends BaseHttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         try {
-            if (routes.isEmpty()) {
-                throw new NotFoundRoute("Method Not Allowed");
+            var routesByPath = this.routes.stream()
+                    .filter(r -> r.path().matcher(exchange.getRequestURI().getPath()).matches())
+                    .toList();
+
+            if (routesByPath.isEmpty()) {
+                throw new NotFoundRoute("Маршрут не найден");
             }
 
-            var filteredRoutes = this.routes.stream().filter(r -> r.matches().test(exchange)).toList();
-
-            if (filteredRoutes.isEmpty()) {
-                throw new NotFoundRoute("Method Not Allowed");
-            }
-
-            var route = this.routes.stream().filter(r -> r.matches().test(exchange)).toList().getFirst();
-
-            if (route == null) {
-                throw new NotFoundRoute("Method Not Allowed");
-            }
+            var route = routesByPath.stream()
+                    .filter(r -> r.method().equals(exchange.getRequestMethod()))
+                    .findFirst()
+                    .orElseThrow(() -> new NotAllowedMethod("Метод не поддерживается"));
 
             route.handler().handle(exchange);
         } catch (AppException e) {
@@ -83,8 +71,6 @@ class MoviesRouter extends BaseHttpHandler {
         } catch (Exception e) {
             exchange.sendResponseHeaders(500, -1);
         }
-
-        exchange.sendResponseHeaders(404, -1);
     }
 
     public void start() {
