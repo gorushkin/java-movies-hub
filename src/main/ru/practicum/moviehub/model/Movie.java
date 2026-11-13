@@ -15,43 +15,9 @@ public class Movie {
     public Movie(int id, int year, String title) {
         String trimmedTitle = title.trim();
 
-        validateMovie(year, title);
-
         this.id = id;
         this.year = year;
         this.title = trimmedTitle;
-    }
-
-    private void validateMovie(int year, String title) {
-        List<String> errors = new ArrayList<>();
-
-        validateYear(year, errors);
-        validateTitle(title, errors);
-
-        if (!errors.isEmpty()) {
-            throw new MovieValidationException(errors);
-        }
-    }
-
-    private void validateYear(int year, List<String> errors) {
-        int minYear = 1900;
-        int maxYear = LocalDate.now().getYear() + 1;
-
-        if (year < minYear || year > maxYear) {
-            errors.add(String.format("год должен быть между %s и %s", minYear, maxYear));
-        }
-    }
-
-    private void validateTitle(String title, List<String> errors) {
-        int maxTitleLength = 100;
-
-        if (title.isEmpty()) {
-            errors.add("название не должно быть пустым");
-        }
-
-        if (title.length() > maxTitleLength) {
-            errors.add(String.format("максимальная длина названия - %s символов", maxTitleLength));
-        }
     }
 
     public String getTitle() {

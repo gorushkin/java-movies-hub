@@ -28,7 +28,7 @@ public class MoviesApiTest {
 
     @BeforeEach
     void beforeEach() throws IOException {
-        int port = 8080;
+        int port = 8085;
         this.urlBuilder = new UrlBuilder("http://localhost", port).addPathSegment("movies");
         this.movieStore = new MoviesStore();
         this.server = new MoviesServer(this.movieStore, port);

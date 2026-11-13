@@ -36,6 +36,8 @@ public class AddMovieHandler extends BaseHttpHandlerWithStore {
         String movieDTODeserialized = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         MovieDTO movieDTO = gson.fromJson(movieDTODeserialized, MovieDTO.class);
 
+        MoveValidator.validateMovie(movieDTO.year(), movieDTO.title());
+
         Movie addedMovie = this.moviesStore.addMovie(movieDTO.year(), movieDTO.title());
         sendResponseWithBody(addedMovie, exchange, 201);
     }
