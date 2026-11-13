@@ -572,6 +572,38 @@ public class MoviesApiTest {
         assertMissingYearIsRejected("{\"title\":\"Movie\"}");
     }
 
+    @Test
+    void addMovie_whenJsonUsesUnquotedNames_returnsBadRequest() throws Exception {
+        var response = sendPost("application/json", "{title:\"Movie\",year:2000}");
+
+        assertErrorResponse(response, 400);
+        assertEquals(0, movieStore.size());
+    }
+
+    @Test
+    void addMovie_whenJsonUsesSingleQuotes_returnsBadRequest() throws Exception {
+        var response = sendPost("application/json", "{'title':'Movie','year':2000}");
+
+        assertErrorResponse(response, 400);
+        assertEquals(0, movieStore.size());
+    }
+
+    @Test
+    void addMovie_whenJsonHasTrailingDocument_returnsBadRequest() throws Exception {
+        var response = sendPost("application/json", "{\"title\":\"Movie\",\"year\":2000} {}");
+
+        assertErrorResponse(response, 400);
+        assertEquals(0, movieStore.size());
+    }
+
+    @Test
+    void addMovie_whenJsonContainsComments_returnsBadRequest() throws Exception {
+        var response = sendPost("application/json", "{/* comment */ \"title\":\"Movie\",\"year\":2000}");
+
+        assertErrorResponse(response, 400);
+        assertEquals(0, movieStore.size());
+    }
+
     private void assertMissingYearIsRejected(String body) throws Exception {
         var response = sendPost("application/json", body);
 
