@@ -145,7 +145,7 @@ public class MoviesApiTest {
         Movie parsedMovie = gson.fromJson(body, Movie.class);
         assertTrue(parsedMovie.getId() > 0);
         assertEquals(parsedMovie, movieStore.getMovieById(parsedMovie.getId()));
-        Assertions.assertEquals(data1.year(), parsedMovie.getYear(), "Год добавленного фильма совпадает");
+        Assertions.assertEquals(data1.year().intValue(), parsedMovie.getYear(), "Год добавленного фильма совпадает");
         Assertions.assertEquals(data1.title(), parsedMovie.getTitle(), "Название добавленного фильма совпадает");
     }
 
@@ -562,12 +562,33 @@ public class MoviesApiTest {
         assertErrorResponse(response, 405);
     }
 
+    @Test
+    void addMovie_whenYearIsNull_returnsValidationError() throws Exception {
+        assertMissingYearIsRejected("{\"title\":\"Movie\",\"year\":null}");
+    }
+
+    @Test
+    void addMovie_whenYearIsMissing_returnsValidationError() throws Exception {
+        assertMissingYearIsRejected("{\"title\":\"Movie\"}");
+    }
+
+    private void assertMissingYearIsRejected(String body) throws Exception {
+        var response = sendPost("application/json", body);
+
+        assertErrorResponse(response, 422);
+        var error = new Gson().fromJson(response.body(), ErrorResponse.class);
+        assertEquals(MovieValidationException.errorName, error.getError());
+        assertEquals(List.of("год должен быть указан"), error.getDetails());
+        assertEquals(0, movieStore.size());
+    }
+
     private HttpResponse<String> sendPost(String contentType, String body) throws Exception {
         var request = HttpRequest.newBuilder()
                 .uri(urlBuilder.buildUri())
                 .header("Content-Type", contentType)
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
+
         return HttpClient.newHttpClient().send(request,
                 HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
     }

@@ -22,11 +22,13 @@ public class MoveValidator {
         }
     }
 
-    private static void validateYear(int year, List<String> errors) {
+    private static void validateYear(Integer year, List<String> errors) {
         int minYear = 1888;
         int maxYear = LocalDate.now().getYear() + 1;
 
-        if (year < minYear || year > maxYear) {
+        if (year == null) {
+            errors.add("год должен быть указан");
+        } else if (year < minYear || year > maxYear) {
             errors.add(String.format("год должен быть между %s и %s", minYear, maxYear));
         }
     }

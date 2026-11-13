@@ -1,4 +1,4 @@
 package ru.practicum.moviehub.dto;
 
-public record MovieDTO(int year, String title) {
+public record MovieDTO(Integer year, String title) {
 }
