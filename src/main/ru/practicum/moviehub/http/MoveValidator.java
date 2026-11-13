@@ -12,6 +12,7 @@ import java.util.List;
 public class MoveValidator {
     private static final int minYear = 1888;
     private static final int maxYear = LocalDate.now().getYear() + 1;
+
     public static void validateMovie(MovieDTO movieDTO) throws MovieValidationException {
         List<String> errors = new ArrayList<>();
 

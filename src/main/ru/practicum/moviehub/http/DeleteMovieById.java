@@ -25,7 +25,7 @@ public class DeleteMovieById extends BaseHttpHandlerWithStore {
                 throw new NotFoundException("Фильм не найден");
             }
 
-            sendResponseWithoutBody( exchange, 204);
+            sendResponseWithoutBody(exchange, 204);
         } catch (NumberFormatException e) {
             throw new BadRequestException("Некорректный ID");
         }
